@@ -26,6 +26,8 @@ env/
 ENV/
 .venv
 .kiro
+docs
+tests
 
 # IDEs
 .vscode/

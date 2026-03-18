@@ -29,6 +29,12 @@ kafka-python = "^2.0.2"
 psycopg2-binary = "^2.9.9"
 redis = "^5.0.1"
 influxdb-client = "^1.39.0"
+sqlalchemy = "^2.0.0"
+pyodbc = "^5.0.0"
+
+# ISA-95 Connectors
+asyncua = "^1.0.0"
+paho-mqtt = "^1.6.1"
 
 # Utilities
 python-dotenv = "^1.0.0"
@@ -73,7 +79,7 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v --cov=src --cov-report=term-missing --cov-report=html"
+addopts = "-v"
 
 [build-system]
 requires = ["poetry-core"]

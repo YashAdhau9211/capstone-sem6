@@ -1,4 +1,4 @@
-.PHONY: help install dev-setup test lint format clean docker-up docker-down
+.PHONY: help install dev-setup test lint format clean docker-up docker-down mock-data test-mock
 
 help:
 	@echo "Causal AI Manufacturing Platform - Development Commands"
@@ -11,6 +11,8 @@ help:
 	@echo "  make format       - Format code with black and isort"
 	@echo "  make docker-up    - Start Docker services"
 	@echo "  make docker-down  - Stop Docker services"
+	@echo "  make mock-data    - Generate mock manufacturing data"
+	@echo "  make test-mock    - Run example tests with mock data"
 	@echo "  make clean        - Clean build artifacts and cache"
 
 install:
@@ -40,3 +42,12 @@ clean:
 	find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name ".mypy_cache" -exec rm -rf {} + 2>/dev/null || true
 	rm -rf build dist htmlcov .coverage
+
+mock-data:
+	@echo "Generating mock manufacturing data..."
+	python scripts/generate_mock_data.py --days 30
+	@echo "✓ Mock data generated in data/mock/"
+
+test-mock:
+	@echo "Running example tests with mock data..."
+	python examples/test_with_mock_data.py
