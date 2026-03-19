@@ -1,19 +1,20 @@
-.PHONY: help install dev-setup test lint format clean docker-up docker-down mock-data test-mock
+.PHONY: help install dev-setup test lint format clean docker-up docker-down mock-data test-mock setup-influxdb
 
 help:
 	@echo "Causal AI Manufacturing Platform - Development Commands"
 	@echo ""
 	@echo "Available commands:"
-	@echo "  make install      - Install dependencies using Poetry"
-	@echo "  make dev-setup    - Set up development environment"
-	@echo "  make test         - Run test suite with coverage"
-	@echo "  make lint         - Run linting checks"
-	@echo "  make format       - Format code with black and isort"
-	@echo "  make docker-up    - Start Docker services"
-	@echo "  make docker-down  - Stop Docker services"
-	@echo "  make mock-data    - Generate mock manufacturing data"
-	@echo "  make test-mock    - Run example tests with mock data"
-	@echo "  make clean        - Clean build artifacts and cache"
+	@echo "  make install        - Install dependencies using Poetry"
+	@echo "  make dev-setup      - Set up development environment"
+	@echo "  make test           - Run test suite with coverage"
+	@echo "  make lint           - Run linting checks"
+	@echo "  make format         - Format code with black and isort"
+	@echo "  make docker-up      - Start Docker services"
+	@echo "  make docker-down    - Stop Docker services"
+	@echo "  make setup-influxdb - Configure InfluxDB buckets and retention policies"
+	@echo "  make mock-data      - Generate mock manufacturing data"
+	@echo "  make test-mock      - Run example tests with mock data"
+	@echo "  make clean          - Clean build artifacts and cache"
 
 install:
 	poetry install
@@ -35,6 +36,11 @@ docker-up:
 
 docker-down:
 	docker-compose down
+
+setup-influxdb:
+	@echo "Setting up InfluxDB buckets and retention policies..."
+	poetry run python scripts/setup_influxdb.py
+	@echo "✓ InfluxDB setup complete"
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
