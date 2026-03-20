@@ -1,0 +1,32 @@
+{
+  "generation_date": "2026-03-18T20:12:26.501615",
+  "start_date": "2024-01-01T00:00:00",
+  "days": 7,
+  "frequency": "1min",
+  "total_samples": 10080,
+  "stations": [
+    "furnace-01",
+    "mill-01",
+    "anneal-01"
+  ],
+  "causal_relationships": {
+    "furnace-01": [
+      "hot_blast_temp \u2192 furnace_top_temp \u2192 pig_iron_production_rate",
+      "oxygen_flow \u2192 carbon_content \u2192 iron_quality_index",
+      "coal_injection_rate \u2192 fuel_consumption \u2192 power_consumption",
+      "ore_feed_rate \u2192 slag_volume"
+    ],
+    "mill-01": [
+      "slab_entry_temp \u2192 rolling_force \u2192 thickness_exit",
+      "roll_speed \u2192 surface_quality_index",
+      "cooling_water_flow \u2192 slab_exit_temp \u2192 flatness",
+      "motor_power \u2192 vibration_x, vibration_y"
+    ],
+    "anneal-01": [
+      "heating_zone_temp \u2192 soaking_zone_temp \u2192 grain_size \u2192 hardness",
+      "strip_speed \u2192 cooling_rate \u2192 tensile_strength",
+      "hydrogen_concentration \u2192 surface_quality",
+      "gas_consumption \u2192 electricity_consumption"
+    ]
+  }
+}
