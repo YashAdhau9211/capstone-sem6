@@ -82,6 +82,10 @@ app = FastAPI(
             "description": "Counterfactual simulation endpoints",
         },
         {
+            "name": "scenarios",
+            "description": "Simulation scenario management endpoints",
+        },
+        {
             "name": "rca",
             "description": "Root cause analysis endpoints",
         },
@@ -96,6 +100,10 @@ app = FastAPI(
         {
             "name": "discovery",
             "description": "Causal discovery job endpoints",
+        },
+        {
+            "name": "websocket",
+            "description": "WebSocket endpoints for real-time updates",
         },
     ],
 )
