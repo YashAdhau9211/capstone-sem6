@@ -1,0 +1,546 @@
+"""Causal DAG management API endpoints."""
+
+import logging
+from datetime import datetime
+from typing import Optional
+from uuid import uuid4
+
+from fastapi import APIRouter, HTTPException, Path, Query, status
+from fastapi.responses import PlainTextResponse
+
+from src.api.exceptions import ResourceNotFoundError, ValidationError
+from src.api.models import (
+    DAGModificationRequest,
+    DAGModificationResponse,
+    DAGResponse,
+    DAGSaveRequest,
+    DAGVersionInfo,
+    DAGVersionListResponse,
+)
+from src.models.causal_graph import CausalDAG, CausalEdge
+from src.models.dag_repository import DAGRepository
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter()
+
+
+@router.get("/{station_id}", response_model=DAGResponse, status_code=status.HTTP_200_OK)
+async def get_current_dag(
+    station_id: str = Path(..., description="Manufacturing station identifier"),
+) -> DAGResponse:
+    """
+    Get the current causal DAG for a manufacturing station.
+
+    Returns the latest version of the DAG with nodes, edges, and metadata.
+
+    **Requirements:** 7.8, 14.5
+    """
+    try:
+        dag_repo = DAGRepository()
+        dag = dag_repo.load_dag(station_id=station_id)
+        
+        if dag is None:
+            raise ResourceNotFoundError(
+                resource_type="DAG",
+                resource_id=station_id
+            )
+        
+        logger.info(f"Retrieved current DAG for station {station_id}, version {dag.version}")
+        
+        # Convert edges to dictionary format
+        edges = [
+            {
+                "source": edge.source,
+                "target": edge.target,
+                "coefficient": edge.coefficient,
+                "confidence": edge.confidence,
+                "edge_type": edge.edge_type,
+                "metadata": edge.metadata
+            }
+            for edge in dag.edges
+        ]
+        
+        return DAGResponse(
+            dag_id=dag.dag_id,
+            station_id=dag.station_id,
+            version=dag.version,
+            nodes=dag.nodes,
+            edges=edges,
+            algorithm=dag.algorithm,
+            created_at=dag.created_at,
+            metadata=dag.metadata
+        )
+        
+    except ResourceNotFoundError:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving DAG for station {station_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal error retrieving DAG: {str(e)}"
+        )
+    finally:
+        if 'dag_repo' in locals():
+            dag_repo.close()
+
+
+@router.get(
+    "/{station_id}/versions",
+    response_model=DAGVersionListResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def list_dag_versions(
+    station_id: str = Path(..., description="Manufacturing station identifier"),
+) -> DAGVersionListResponse:
+    """
+    List all DAG versions for a manufacturing station.
+
+    Returns version history with up to 50 versions per station.
+
+    **Requirements:** 7.8, 14.5
+    """
+    try:
+        dag_repo = DAGRepository()
+        versions = dag_repo.list_versions(station_id=station_id)
+        
+        logger.info(f"Retrieved {len(versions)} versions for station {station_id}")
+        
+        # Convert to response model
+        version_infos = [
+            DAGVersionInfo(
+                dag_id=v["dag_id"],
+                version=v["version"],
+                algorithm=v["algorithm"],
+                created_at=v["created_at"],
+                created_by=v["created_by"]
+            )
+            for v in versions
+        ]
+        
+        return DAGVersionListResponse(
+            station_id=station_id,
+            versions=version_infos,
+            total_count=len(version_infos)
+        )
+        
+    except Exception as e:
+        logger.error(f"Error listing DAG versions for station {station_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal error listing DAG versions: {str(e)}"
+        )
+    finally:
+        if 'dag_repo' in locals():
+            dag_repo.close()
+
+
+@router.get(
+    "/{station_id}/versions/{version}",
+    response_model=DAGResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_dag_version(
+    station_id: str = Path(..., description="Manufacturing station identifier"),
+    version: int = Path(..., description="DAG version number"),
+) -> DAGResponse:
+    """
+    Get a specific version of a causal DAG.
+
+    **Requirements:** 7.8, 14.5
+    """
+    try:
+        dag_repo = DAGRepository()
+        dag = dag_repo.load_dag(station_id=station_id, version=version)
+        
+        if dag is None:
+            raise ResourceNotFoundError(
+                resource_type="DAG",
+                resource_id=f"{station_id}/version/{version}"
+            )
+        
+        logger.info(f"Retrieved DAG for station {station_id}, version {version}")
+        
+        # Convert edges to dictionary format
+        edges = [
+            {
+                "source": edge.source,
+                "target": edge.target,
+                "coefficient": edge.coefficient,
+                "confidence": edge.confidence,
+                "edge_type": edge.edge_type,
+                "metadata": edge.metadata
+            }
+            for edge in dag.edges
+        ]
+        
+        return DAGResponse(
+            dag_id=dag.dag_id,
+            station_id=dag.station_id,
+            version=dag.version,
+            nodes=dag.nodes,
+            edges=edges,
+            algorithm=dag.algorithm,
+            created_at=dag.created_at,
+            metadata=dag.metadata
+        )
+        
+    except ResourceNotFoundError:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving DAG version {version} for station {station_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal error retrieving DAG version: {str(e)}"
+        )
+    finally:
+        if 'dag_repo' in locals():
+            dag_repo.close()
+
+
+@router.get(
+    "/{station_id}/export", response_model=str, status_code=status.HTTP_200_OK
+)
+async def export_dag(
+    station_id: str = Path(..., description="Manufacturing station identifier"),
+    format: str = Query(..., description="Export format: dot or graphml"),
+) -> str:
+    """
+    Export causal DAG to DOT or GraphML format.
+
+    **Formats:**
+    - `dot`: Graphviz DOT format
+    - `graphml`: GraphML XML format
+
+    **Requirements:** 22.7, 22.8
+    """
+    if format not in ["dot", "graphml"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Format must be 'dot' or 'graphml'",
+        )
+
+    try:
+        dag_repo = DAGRepository()
+        dag = dag_repo.load_dag(station_id=station_id)
+        
+        if dag is None:
+            raise ResourceNotFoundError(
+                resource_type="DAG",
+                resource_id=station_id
+            )
+        
+        # Export to requested format
+        if format == "dot":
+            content = dag.to_dot()
+            media_type = "text/vnd.graphviz"
+        else:  # graphml
+            content = dag.to_graphml()
+            media_type = "application/xml"
+        
+        logger.info(f"Exported DAG for station {station_id} to {format} format")
+        
+        return PlainTextResponse(content=content, media_type=media_type)
+        
+    except ResourceNotFoundError:
+        raise
+    except Exception as e:
+        logger.error(f"Error exporting DAG for station {station_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal error exporting DAG: {str(e)}"
+        )
+    finally:
+        if 'dag_repo' in locals():
+            dag_repo.close()
+
+
+@router.post("/{station_id}", response_model=DAGResponse, status_code=status.HTTP_201_CREATED)
+async def save_dag(
+    station_id: str = Path(..., description="Manufacturing station identifier"),
+    request: DAGSaveRequest = ...,
+) -> DAGResponse:
+    """
+    Save a new DAG version for a manufacturing station.
+
+    Creates a new version of the DAG with the provided nodes and edges.
+    Validates that the resulting graph is acyclic before saving.
+
+    **Requirements:** 7.1, 7.2, 7.3, 7.4
+    """
+    try:
+        # Convert edge dictionaries to CausalEdge objects
+        edges = []
+        for edge_data in request.edges:
+            edges.append(
+                CausalEdge(
+                    source=edge_data["source"],
+                    target=edge_data["target"],
+                    coefficient=edge_data.get("coefficient", 0.0),
+                    confidence=edge_data.get("confidence", 1.0),
+                    edge_type=edge_data.get("edge_type", "linear"),
+                    metadata=edge_data.get("metadata", {})
+                )
+            )
+        
+        # Create new DAG
+        dag = CausalDAG(
+            dag_id=uuid4(),
+            station_id=station_id,
+            version=0,  # Will be set by repository
+            nodes=request.nodes,
+            edges=edges,
+            algorithm=request.algorithm,
+            created_at=datetime.utcnow(),
+            created_by=request.created_by,
+            metadata=request.metadata
+        )
+        
+        # Validate acyclicity (done in __post_init__)
+        if not dag.is_acyclic():
+            raise ValidationError(
+                message="Cannot save DAG: graph contains cycles",
+                detail={"station_id": station_id}
+            )
+        
+        # Save to repository
+        dag_repo = DAGRepository()
+        dag_id = dag_repo.save_dag(dag)
+        
+        # Reload to get assigned version
+        saved_dag = dag_repo.load_dag(station_id=station_id)
+        
+        logger.info(f"Saved new DAG version {saved_dag.version} for station {station_id}")
+        
+        # Convert edges to dictionary format
+        edges_dict = [
+            {
+                "source": edge.source,
+                "target": edge.target,
+                "coefficient": edge.coefficient,
+                "confidence": edge.confidence,
+                "edge_type": edge.edge_type,
+                "metadata": edge.metadata
+            }
+            for edge in saved_dag.edges
+        ]
+        
+        return DAGResponse(
+            dag_id=saved_dag.dag_id,
+            station_id=saved_dag.station_id,
+            version=saved_dag.version,
+            nodes=saved_dag.nodes,
+            edges=edges_dict,
+            algorithm=saved_dag.algorithm,
+            created_at=saved_dag.created_at,
+            metadata=saved_dag.metadata
+        )
+        
+    except ValidationError:
+        raise
+    except ValueError as e:
+        # Catch cycle detection errors
+        raise ValidationError(
+            message=str(e),
+            detail={"station_id": station_id}
+        )
+    except Exception as e:
+        logger.error(f"Error saving DAG for station {station_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal error saving DAG: {str(e)}"
+        )
+    finally:
+        if 'dag_repo' in locals():
+            dag_repo.close()
+
+
+@router.put("/{station_id}/edges", response_model=DAGModificationResponse, status_code=status.HTTP_200_OK)
+async def modify_dag_edges(
+    station_id: str = Path(..., description="Manufacturing station identifier"),
+    request: DAGModificationRequest = ...,
+) -> DAGModificationResponse:
+    """
+    Add, delete, or reverse edges in a causal DAG.
+
+    Applies the specified edge operations and creates a new DAG version.
+    Validates that the resulting graph remains acyclic before saving.
+
+    **Operations:**
+    - `add`: Add a new directed edge
+    - `delete`: Remove an existing edge
+    - `reverse`: Reverse the direction of an edge
+
+    **Requirements:** 7.1, 7.2, 7.3, 7.4
+    """
+    try:
+        # Load current DAG
+        dag_repo = DAGRepository()
+        current_dag = dag_repo.load_dag(station_id=station_id)
+        
+        if current_dag is None:
+            raise ResourceNotFoundError(
+                resource_type="DAG",
+                resource_id=station_id
+            )
+        
+        # Copy current DAG structure
+        nodes = current_dag.nodes.copy()
+        edges = [
+            CausalEdge(
+                source=e.source,
+                target=e.target,
+                coefficient=e.coefficient,
+                confidence=e.confidence,
+                edge_type=e.edge_type,
+                metadata=e.metadata.copy()
+            )
+            for e in current_dag.edges
+        ]
+        
+        # Apply operations
+        operations_applied = 0
+        for op in request.operations:
+            if op.operation == "add":
+                # Validate nodes exist
+                if op.source not in nodes:
+                    raise ValidationError(
+                        message=f"Source node '{op.source}' not found in DAG",
+                        detail={"operation": "add", "source": op.source}
+                    )
+                if op.target not in nodes:
+                    raise ValidationError(
+                        message=f"Target node '{op.target}' not found in DAG",
+                        detail={"operation": "add", "target": op.target}
+                    )
+                
+                # Check if edge already exists
+                existing = any(e.source == op.source and e.target == op.target for e in edges)
+                if existing:
+                    raise ValidationError(
+                        message=f"Edge from '{op.source}' to '{op.target}' already exists",
+                        detail={"operation": "add", "source": op.source, "target": op.target}
+                    )
+                
+                # Add new edge
+                edges.append(
+                    CausalEdge(
+                        source=op.source,
+                        target=op.target,
+                        coefficient=op.coefficient or 0.0,
+                        confidence=op.confidence or 1.0,
+                        edge_type=op.edge_type or "linear",
+                        metadata={}
+                    )
+                )
+                operations_applied += 1
+                
+            elif op.operation == "delete":
+                # Find and remove edge
+                edge_to_remove = None
+                for e in edges:
+                    if e.source == op.source and e.target == op.target:
+                        edge_to_remove = e
+                        break
+                
+                if edge_to_remove is None:
+                    raise ValidationError(
+                        message=f"Edge from '{op.source}' to '{op.target}' not found",
+                        detail={"operation": "delete", "source": op.source, "target": op.target}
+                    )
+                
+                edges.remove(edge_to_remove)
+                operations_applied += 1
+                
+            elif op.operation == "reverse":
+                # Find edge to reverse
+                edge_to_reverse = None
+                for e in edges:
+                    if e.source == op.source and e.target == op.target:
+                        edge_to_reverse = e
+                        break
+                
+                if edge_to_reverse is None:
+                    raise ValidationError(
+                        message=f"Edge from '{op.source}' to '{op.target}' not found",
+                        detail={"operation": "reverse", "source": op.source, "target": op.target}
+                    )
+                
+                # Check if reversed edge would already exist
+                existing_reversed = any(e.source == op.target and e.target == op.source for e in edges)
+                if existing_reversed:
+                    raise ValidationError(
+                        message=f"Cannot reverse: edge from '{op.target}' to '{op.source}' already exists",
+                        detail={"operation": "reverse", "source": op.source, "target": op.target}
+                    )
+                
+                # Remove old edge and add reversed edge
+                edges.remove(edge_to_reverse)
+                edges.append(
+                    CausalEdge(
+                        source=op.target,
+                        target=op.source,
+                        coefficient=edge_to_reverse.coefficient,
+                        confidence=edge_to_reverse.confidence,
+                        edge_type=edge_to_reverse.edge_type,
+                        metadata=edge_to_reverse.metadata.copy()
+                    )
+                )
+                operations_applied += 1
+        
+        # Create new DAG with modifications
+        new_dag = CausalDAG(
+            dag_id=uuid4(),
+            station_id=station_id,
+            version=0,  # Will be set by repository
+            nodes=nodes,
+            edges=edges,
+            algorithm="expert_edited",
+            created_at=datetime.utcnow(),
+            created_by=request.created_by,
+            metadata={"parent_version": current_dag.version}
+        )
+        
+        # Validate acyclicity
+        if not new_dag.is_acyclic():
+            raise ValidationError(
+                message="Cannot apply modifications: resulting graph contains cycles",
+                detail={"station_id": station_id, "operations_applied": operations_applied}
+            )
+        
+        # Save new version
+        dag_id = dag_repo.save_dag(new_dag, parent_version=current_dag.version)
+        
+        # Reload to get assigned version
+        saved_dag = dag_repo.load_dag(station_id=station_id)
+        
+        logger.info(
+            f"Applied {operations_applied} edge operations to station {station_id}, "
+            f"created version {saved_dag.version}"
+        )
+        
+        return DAGModificationResponse(
+            dag_id=saved_dag.dag_id,
+            station_id=saved_dag.station_id,
+            version=saved_dag.version,
+            operations_applied=operations_applied,
+            timestamp=datetime.utcnow()
+        )
+        
+    except (ResourceNotFoundError, ValidationError):
+        raise
+    except ValueError as e:
+        # Catch cycle detection errors
+        raise ValidationError(
+            message=str(e),
+            detail={"station_id": station_id}
+        )
+    except Exception as e:
+        logger.error(f"Error modifying DAG edges for station {station_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal error modifying DAG: {str(e)}"
+        )
+    finally:
+        if 'dag_repo' in locals():
+            dag_repo.close()
