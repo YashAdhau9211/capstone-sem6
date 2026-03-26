@@ -121,6 +121,42 @@ export const DashboardPage: React.FC = () => {
             View RCA
           </button>
         </div>
+
+        <div style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '8px' }}>
+          <h3>Energy Optimization</h3>
+          <p>Get recommendations for reducing energy consumption</p>
+          <button
+            onClick={() => navigate('/energy-optimization')}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#28a745',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+          >
+            Optimize Energy
+          </button>
+        </div>
+
+        <div style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '8px' }}>
+          <h3>Yield Optimization</h3>
+          <p>Get recommendations for maximizing production yield</p>
+          <button
+            onClick={() => navigate('/yield-optimization')}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#17a2b8',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+          >
+            Optimize Yield
+          </button>
+        </div>
       </div>
     </div>
   );

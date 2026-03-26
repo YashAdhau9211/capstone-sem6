@@ -250,6 +250,29 @@ export const api = {
     },
   },
 
+  // Optimization
+  optimization: {
+    energy: async (request: {
+      station_id: string;
+      energy_variable: string;
+      constraints?: Record<string, [number, number]>;
+    }) => {
+      const response = await apiClient.post('/api/v1/optimization/energy', request);
+      return response.data;
+    },
+    yield: async (request: {
+      station_id: string;
+      yield_variable: string;
+      energy_variable?: string;
+      quality_variable?: string;
+      constraints?: Record<string, [number, number]>;
+      optimization_weights?: Record<string, number>;
+    }) => {
+      const response = await apiClient.post('/api/v1/optimization/yield', request);
+      return response.data;
+    },
+  },
+
   // Causal Discovery
   discovery: {
     start: async (stationId: string, algorithm: 'DirectLiNGAM' | 'RESIT') => {

@@ -102,6 +102,10 @@ app = FastAPI(
             "description": "Causal discovery job endpoints",
         },
         {
+            "name": "optimization",
+            "description": "Energy and yield optimization recommendation endpoints",
+        },
+        {
             "name": "websocket",
             "description": "WebSocket endpoints for real-time updates",
         },

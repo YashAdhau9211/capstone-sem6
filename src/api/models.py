@@ -248,3 +248,70 @@ class DAGModificationResponse(BaseModel):
     version: int = Field(..., description="New version number")
     operations_applied: int = Field(..., description="Number of operations successfully applied")
     timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+
+# Optimization recommendation models
+class OptimizationRecommendation(BaseModel):
+    """Single optimization recommendation."""
+
+    variable: str = Field(..., description="Variable to adjust")
+    current_value: float = Field(..., description="Current average value")
+    recommended_value: float = Field(..., description="Recommended value")
+    direction: str = Field(..., description="Direction: increase or decrease")
+    causal_effect: float = Field(..., description="Causal effect magnitude")
+    expected_savings: float = Field(..., description="Expected savings or improvement")
+    confidence_interval: Tuple[float, float] = Field(..., description="95% confidence interval")
+    constraint_violated: bool = Field(..., description="Whether recommendation violates constraints")
+    adjustment_set: List[str] = Field(..., description="Variables adjusted for in estimation")
+    energy_tradeoff: Optional[float] = Field(None, description="Effect on energy consumption")
+    quality_tradeoff: Optional[float] = Field(None, description="Effect on quality")
+    weighted_score: Optional[float] = Field(None, description="Multi-objective weighted score")
+
+
+class EnergyOptimizationRequest(BaseModel):
+    """Request for energy optimization recommendations."""
+
+    station_id: str = Field(..., description="Manufacturing station identifier")
+    energy_variable: str = Field(..., description="Energy consumption variable name")
+    constraints: Optional[Dict[str, Tuple[float, float]]] = Field(
+        None, description="Variable constraints as {variable: (min, max)}"
+    )
+
+
+class EnergyOptimizationResponse(BaseModel):
+    """Response with energy optimization recommendations."""
+
+    station_id: str = Field(..., description="Manufacturing station identifier")
+    energy_variable: str = Field(..., description="Energy consumption variable name")
+    recommendations: List[OptimizationRecommendation] = Field(
+        ..., description="Recommendations ranked by expected savings"
+    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+
+
+class YieldOptimizationRequest(BaseModel):
+    """Request for yield optimization recommendations."""
+
+    station_id: str = Field(..., description="Manufacturing station identifier")
+    yield_variable: str = Field(..., description="Yield variable name")
+    energy_variable: Optional[str] = Field(None, description="Energy consumption variable for trade-off analysis")
+    quality_variable: Optional[str] = Field(None, description="Quality variable for trade-off analysis")
+    constraints: Optional[Dict[str, Tuple[float, float]]] = Field(
+        None, description="Variable constraints as {variable: (min, max)}"
+    )
+    optimization_weights: Optional[Dict[str, float]] = Field(
+        None, description="Multi-objective weights: {yield: w1, energy: w2, quality: w3}"
+    )
+
+
+class YieldOptimizationResponse(BaseModel):
+    """Response with yield optimization recommendations."""
+
+    station_id: str = Field(..., description="Manufacturing station identifier")
+    yield_variable: str = Field(..., description="Yield variable name")
+    energy_variable: Optional[str] = Field(None, description="Energy variable used for trade-off analysis")
+    quality_variable: Optional[str] = Field(None, description="Quality variable used for trade-off analysis")
+    recommendations: List[OptimizationRecommendation] = Field(
+        ..., description="Recommendations ranked by expected improvement or weighted score"
+    )
+    timestamp: datetime = Field(default_factory=datetime.utcnow)

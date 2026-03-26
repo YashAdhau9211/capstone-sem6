@@ -3,7 +3,10 @@ import { api } from '../services/api';
 
 interface HistoricalReplayProps {
   stationId: string;
-  onRunReplay: (timeRange: { start: string; end: string }, interventions: Record<string, number>) => void;
+  onRunReplay: (
+    timeRange: { start: string; end: string },
+    interventions: Record<string, number>
+  ) => void;
   replayResult: any | null;
   loading: boolean;
 }
@@ -56,7 +59,14 @@ export const HistoricalReplay: React.FC<HistoricalReplayProps> = ({
       <h3 style={{ marginBottom: '20px' }}>Historical Scenario Replay</h3>
 
       {/* Time Range Selection */}
-      <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '4px' }}>
+      <div
+        style={{
+          marginBottom: '20px',
+          padding: '15px',
+          backgroundColor: '#f8f9fa',
+          borderRadius: '4px',
+        }}
+      >
         <h4 style={{ marginTop: 0 }}>Time Range</h4>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
           <div>
@@ -95,9 +105,16 @@ export const HistoricalReplay: React.FC<HistoricalReplayProps> = ({
       </div>
 
       {/* Interventions */}
-      <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '4px' }}>
+      <div
+        style={{
+          marginBottom: '20px',
+          padding: '15px',
+          backgroundColor: '#f8f9fa',
+          borderRadius: '4px',
+        }}
+      >
         <h4 style={{ marginTop: 0 }}>Counterfactual Interventions</h4>
-        
+
         {Object.keys(interventions).length > 0 && (
           <div style={{ marginBottom: '15px' }}>
             {Object.entries(interventions).map(([variable, value]) => (
@@ -199,7 +216,7 @@ export const HistoricalReplay: React.FC<HistoricalReplayProps> = ({
       {replayResult && (
         <div style={{ marginTop: '20px' }}>
           <h4>Replay Results</h4>
-          
+
           {/* Aggregate Metrics */}
           {replayResult.aggregate_metrics && (
             <div style={{ marginBottom: '20px' }}>
@@ -217,16 +234,28 @@ export const HistoricalReplay: React.FC<HistoricalReplayProps> = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {Object.entries(replayResult.aggregate_metrics).map(([variable, metrics]: [string, any]) => (
-                      <tr key={variable} style={{ borderBottom: '1px solid #dee2e6' }}>
-                        <td style={{ padding: '12px', fontWeight: 'bold' }}>{variable}</td>
-                        <td style={{ padding: '12px', textAlign: 'right' }}>{metrics.mean.toFixed(3)}</td>
-                        <td style={{ padding: '12px', textAlign: 'right' }}>{metrics.std.toFixed(3)}</td>
-                        <td style={{ padding: '12px', textAlign: 'right' }}>{metrics.p25.toFixed(3)}</td>
-                        <td style={{ padding: '12px', textAlign: 'right' }}>{metrics.p50.toFixed(3)}</td>
-                        <td style={{ padding: '12px', textAlign: 'right' }}>{metrics.p75.toFixed(3)}</td>
-                      </tr>
-                    ))}
+                    {Object.entries(replayResult.aggregate_metrics).map(
+                      ([variable, metrics]: [string, any]) => (
+                        <tr key={variable} style={{ borderBottom: '1px solid #dee2e6' }}>
+                          <td style={{ padding: '12px', fontWeight: 'bold' }}>{variable}</td>
+                          <td style={{ padding: '12px', textAlign: 'right' }}>
+                            {metrics.mean.toFixed(3)}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'right' }}>
+                            {metrics.std.toFixed(3)}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'right' }}>
+                            {metrics.p25.toFixed(3)}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'right' }}>
+                            {metrics.p50.toFixed(3)}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'right' }}>
+                            {metrics.p75.toFixed(3)}
+                          </td>
+                        </tr>
+                      )
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -266,12 +295,21 @@ export const HistoricalReplay: React.FC<HistoricalReplayProps> = ({
           </button>
 
           {/* Time Series Visualization Placeholder */}
-          <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '4px', textAlign: 'center' }}>
+          <div
+            style={{
+              marginTop: '20px',
+              padding: '20px',
+              backgroundColor: '#f8f9fa',
+              borderRadius: '4px',
+              textAlign: 'center',
+            }}
+          >
             <p style={{ color: '#666' }}>
               Time series visualization: Factual vs Counterfactual outcomes over time
             </p>
             <p style={{ fontSize: '12px', color: '#999' }}>
-              (Chart visualization would be implemented here using a charting library like Chart.js or Recharts)
+              (Chart visualization would be implemented here using a charting library like Chart.js
+              or Recharts)
             </p>
           </div>
         </div>
@@ -279,25 +317,3 @@ export const HistoricalReplay: React.FC<HistoricalReplayProps> = ({
     </div>
   );
 };
-
-// Helper function to generate CSV
-function generateCSV(replayResult: any): string {
-  if (!replayResult.time_series) {
-    return '';
-  }
-
-  const headers = ['timestamp', 'variable', 'factual', 'counterfactual', 'difference'];
-  const rows = [headers.join(',')];
-
-  replayResult.time_series.forEach((point: any) => {
-    rows.push([
-      point.timestamp,
-      point.variable,
-      point.factual,
-      point.counterfactual,
-      point.difference,
-    ].join(','));
-  });
-
-  return rows.join('\n');
-}

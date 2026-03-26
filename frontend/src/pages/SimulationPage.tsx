@@ -14,7 +14,9 @@ export const SimulationPage: React.FC = () => {
   const [currentDAG, setCurrentDAG] = useState<CausalDAG | null>(null);
   const [factualValues, setFactualValues] = useState<Record<string, number>>({});
   const [interventions, setInterventions] = useState<Record<string, number>>({});
-  const [counterfactualResult, setCounterfactualResult] = useState<CounterfactualResponse | null>(null);
+  const [counterfactualResult, setCounterfactualResult] = useState<CounterfactualResponse | null>(
+    null
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scenarios, setScenarios] = useState<SimulationScenario[]>([]);
@@ -29,11 +31,17 @@ export const SimulationPage: React.FC = () => {
     ? `${import.meta.env.VITE_WS_URL || 'ws://localhost:8000'}/ws/simulation/${selectedStationId}`
     : null;
 
-  const { isConnected: wsConnected, lastMessage } = useWebSocket(wsUrl, {
+  const { isConnected: wsConnected } = useWebSocket(wsUrl, {
     onMessage: (message) => {
-      if (message.type === 'counterfactual_update' && message.data) {
-        setCounterfactualResult(message.data.result);
-        setLatency(message.data.latency_ms);
+      if (
+        message.type === 'counterfactual_update' &&
+        message.data &&
+        typeof message.data === 'object' &&
+        'result' in message.data &&
+        'latency_ms' in message.data
+      ) {
+        setCounterfactualResult(message.data.result as CounterfactualResponse);
+        setLatency(message.data.latency_ms as number);
       }
     },
     onError: (error) => {
@@ -147,7 +155,7 @@ export const SimulationPage: React.FC = () => {
     if (!counterfactualResult || !selectedStationId) return;
 
     try {
-      const savedScenario = await api.scenarios.save({
+      await api.scenarios.save({
         station_id: selectedStationId,
         name,
         description,
@@ -277,7 +285,14 @@ export const SimulationPage: React.FC = () => {
       {activeTab === 'realtime' ? (
         <>
           {/* Real-Time Simulation */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px', marginBottom: '20px' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 2fr',
+              gap: '20px',
+              marginBottom: '20px',
+            }}
+          >
             <InterventionPanel
               dag={currentDAG}
               factualValues={factualValues}

@@ -196,6 +196,66 @@ def _load_station_data(
     return data
 
 
+@router.post("/start", response_model=DiscoveryJobResponse, status_code=status.HTTP_202_ACCEPTED)
+async def start_discovery(
+    request: dict, background_tasks: BackgroundTasks
+) -> DiscoveryJobResponse:
+    """
+    Start causal discovery job (DirectLiNGAM or RESIT).
+
+    Submits an asynchronous job for causal discovery.
+    Returns a job ID for status tracking.
+
+    **Requirements:** 4.1, 5.1
+    """
+    try:
+        station_id = request.get("station_id")
+        algorithm = request.get("algorithm", "DirectLiNGAM")
+        
+        # Validate request
+        if not station_id:
+            raise ValidationError(
+                message="station_id is required", detail={"field": "station_id"}
+            )
+
+        # Create job
+        job_id = uuid4()
+        job = DiscoveryJob(
+            job_id=job_id,
+            station_id=station_id,
+            algorithm=algorithm,
+            data_source=request.get("data_source"),
+            time_range=request.get("time_range"),
+        )
+
+        # Store job
+        _job_store[job_id] = job
+
+        # Schedule background task based on algorithm
+        algorithm_type = "linear" if algorithm == "DirectLiNGAM" else "nonlinear"
+        background_tasks.add_task(_run_discovery_job, job, algorithm_type)
+
+        logger.info(f"Submitted {algorithm} discovery job {job_id} for station {station_id}")
+
+        # Return response
+        return DiscoveryJobResponse(
+            job_id=job_id,
+            station_id=station_id,
+            algorithm=algorithm,
+            status="pending",
+            submitted_at=job.submitted_at,
+        )
+
+    except ValidationError:
+        raise
+    except Exception as e:
+        logger.error(f"Error submitting discovery job: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal error submitting discovery job: {str(e)}",
+        )
+
+
 @router.post("/linear", response_model=DiscoveryJobResponse, status_code=status.HTTP_202_ACCEPTED)
 async def trigger_linear_discovery(
     request: DiscoveryJobRequest, background_tasks: BackgroundTasks

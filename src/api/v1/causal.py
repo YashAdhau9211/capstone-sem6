@@ -3,10 +3,11 @@
 import logging
 from datetime import datetime
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.api.exceptions import ResourceNotFoundError, ValidationError
 from src.api.models import CausalEffectRequest, CausalEffectResponse
+from src.api.rbac import require_run_simulation
 from src.causal_engine.inference import CausalInferenceEngine
 from src.models.dag_repository import DAGRepository
 
@@ -16,7 +17,10 @@ router = APIRouter()
 
 
 @router.post("/estimate", response_model=CausalEffectResponse, status_code=status.HTTP_200_OK)
-async def estimate_causal_effect(request: CausalEffectRequest) -> CausalEffectResponse:
+async def estimate_causal_effect(
+    request: CausalEffectRequest,
+    user: dict = Depends(require_run_simulation),
+) -> CausalEffectResponse:
     """
     Estimate the average treatment effect (ATE) for a treatment-outcome pair.
 

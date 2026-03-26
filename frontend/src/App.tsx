@@ -10,6 +10,9 @@ import {
   ModelsPage,
   RCAPage,
   SimulationPage,
+  EnergyOptimizationPage,
+  YieldOptimizationPage,
+  CitizenAnalystPage,
 } from './pages';
 
 function App() {
@@ -63,6 +66,33 @@ function App() {
             element={
               <ProtectedRoute requiredPermissions={['view_rca']}>
                 <RCAPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/energy-optimization"
+            element={
+              <ProtectedRoute requiredPermissions={['view_model']}>
+                <EnergyOptimizationPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/yield-optimization"
+            element={
+              <ProtectedRoute requiredPermissions={['view_model']}>
+                <YieldOptimizationPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/citizen-analyst"
+            element={
+              <ProtectedRoute requiredPermissions={['run_simulation']}>
+                <CitizenAnalystPage />
               </ProtectedRoute>
             }
           />

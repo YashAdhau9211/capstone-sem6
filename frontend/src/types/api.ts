@@ -117,3 +117,50 @@ export interface APIError {
   detail?: string;
   timestamp: string;
 }
+
+// Optimization Types
+export interface OptimizationRecommendation {
+  variable: string;
+  current_value: number;
+  recommended_value: number;
+  direction: 'increase' | 'decrease';
+  causal_effect: number;
+  expected_savings: number;
+  confidence_interval: [number, number];
+  constraint_violated: boolean;
+  adjustment_set: string[];
+  energy_tradeoff?: number;
+  quality_tradeoff?: number;
+  weighted_score?: number;
+}
+
+export interface EnergyOptimizationRequest {
+  station_id: string;
+  energy_variable: string;
+  constraints?: Record<string, [number, number]>;
+}
+
+export interface EnergyOptimizationResponse {
+  station_id: string;
+  energy_variable: string;
+  recommendations: OptimizationRecommendation[];
+  timestamp: string;
+}
+
+export interface YieldOptimizationRequest {
+  station_id: string;
+  yield_variable: string;
+  energy_variable?: string;
+  quality_variable?: string;
+  constraints?: Record<string, [number, number]>;
+  optimization_weights?: Record<string, number>;
+}
+
+export interface YieldOptimizationResponse {
+  station_id: string;
+  yield_variable: string;
+  energy_variable?: string;
+  quality_variable?: string;
+  recommendations: OptimizationRecommendation[];
+  timestamp: string;
+}

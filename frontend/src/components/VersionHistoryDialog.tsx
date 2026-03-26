@@ -133,8 +133,7 @@ export const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
                       key={version.version}
                       style={{
                         borderBottom: '1px solid #eee',
-                        background:
-                          version.version === currentVersion ? '#e3f2fd' : 'transparent',
+                        background: version.version === currentVersion ? '#e3f2fd' : 'transparent',
                       }}
                     >
                       <td style={{ padding: '10px' }}>
@@ -170,8 +169,7 @@ export const VersionHistoryDialog: React.FC<VersionHistoryDialogProps> = ({
                               border: '1px solid #4CAF50',
                               background: 'white',
                               color: '#4CAF50',
-                              cursor:
-                                loadingVersion !== null ? 'not-allowed' : 'pointer',
+                              cursor: loadingVersion !== null ? 'not-allowed' : 'pointer',
                               fontSize: '12px',
                             }}
                           >

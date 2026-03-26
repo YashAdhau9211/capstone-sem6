@@ -54,6 +54,19 @@ export const GraphBuilderPage: React.FC = () => {
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [showImportExport, setShowImportExport] = useState(false);
 
+  // Helper function to extract API error messages
+  const extractApiError = (err: unknown): { message: string; detail?: string } => {
+    if (err && typeof err === 'object' && 'response' in err) {
+      const response = (err as { response?: { data?: { message?: string; detail?: string } } })
+        .response;
+      return {
+        message: response?.data?.message || 'An error occurred',
+        detail: response?.data?.detail,
+      };
+    }
+    return { message: 'An error occurred' };
+  };
+
   // Load station models
   useEffect(() => {
     const loadModels = async () => {
@@ -275,93 +288,108 @@ export const GraphBuilderPage: React.FC = () => {
   const highlighted = getHighlightedElements();
 
   // Edge manipulation functions
-  const handleAddEdge = async (source: string, target: string) => {
-    if (!selectedModel) return;
+  const handleAddEdge = useCallback(
+    async (source: string, target: string) => {
+      if (!selectedModel) return;
 
-    try {
-      setLoading(true);
-      setOperationStatus(null);
+      try {
+        setLoading(true);
+        setOperationStatus(null);
 
-      await api.dags.modifyEdges(selectedModel.station_id, {
-        operations: [
-          {
-            operation: 'add',
-            source,
-            target,
-            coefficient: 0.0,
-            confidence: 1.0,
-            edge_type: 'linear',
-          },
-        ],
-        created_by: 'current_user', // TODO: Get from auth context
-      });
+        await api.dags.modifyEdges(selectedModel.station_id, {
+          operations: [
+            {
+              operation: 'add',
+              source,
+              target,
+              coefficient: 0.0,
+              confidence: 1.0,
+              edge_type: 'linear',
+            },
+          ],
+          created_by: 'current_user', // TODO: Get from auth context
+        });
 
-      setOperationStatus({
-        type: 'success',
-        message: `Edge added: ${source} → ${target}`,
-      });
+        setOperationStatus({
+          type: 'success',
+          message: `Edge added: ${source} → ${target}`,
+        });
 
-      // Reload DAG
-      const dagData = await api.dags.get(selectedModel.current_dag_id);
-      setDag(dagData);
-      setSelectedNodes([]);
-      setSelectedEdges([]);
-    } catch (err: any) {
-      const errorDetail = err.response?.data?.detail;
-      let errorMessage = err.response?.data?.message || 'Failed to add edge';
-      
-      if (errorDetail?.cycle_path && errorDetail.cycle_path.length > 0) {
-        errorMessage += ` - Cycle detected: ${errorDetail.cycle_path.join(' → ')}`;
+        // Reload DAG
+        const dagData = await api.dags.get(selectedModel.current_dag_id);
+        setDag(dagData);
+        setSelectedNodes([]);
+        setSelectedEdges([]);
+      } catch (err: unknown) {
+        const { message, detail } = extractApiError(err);
+        let errorMessage = message || 'Failed to add edge';
+
+        if (
+          detail &&
+          typeof detail === 'object' &&
+          'cycle_path' in detail &&
+          Array.isArray((detail as { cycle_path?: string[] }).cycle_path) &&
+          (detail as { cycle_path?: string[] }).cycle_path?.length
+        ) {
+          errorMessage += ` - Cycle detected: ${
+            (detail as { cycle_path?: string[] }).cycle_path?.join(' → ') ?? ''
+          }`;
+        }
+
+        setOperationStatus({
+          type: 'error',
+          message: errorMessage,
+        });
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-      
-      setOperationStatus({
-        type: 'error',
-        message: errorMessage,
-      });
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [selectedModel]
+  );
 
-  const handleDeleteEdge = async (source: string, target: string) => {
-    if (!selectedModel) return;
+  const handleDeleteEdge = useCallback(
+    async (source: string, target: string) => {
+      if (!selectedModel) return;
 
-    try {
-      setLoading(true);
-      setOperationStatus(null);
+      try {
+        setLoading(true);
+        setOperationStatus(null);
 
-      await api.dags.modifyEdges(selectedModel.station_id, {
-        operations: [
-          {
-            operation: 'delete',
-            source,
-            target,
-          },
-        ],
-        created_by: 'current_user', // TODO: Get from auth context
-      });
+        await api.dags.modifyEdges(selectedModel.station_id, {
+          operations: [
+            {
+              operation: 'delete',
+              source,
+              target,
+            },
+          ],
+          created_by: 'current_user', // TODO: Get from auth context
+        });
 
-      setOperationStatus({
-        type: 'success',
-        message: `Edge deleted: ${source} → ${target}`,
-      });
+        setOperationStatus({
+          type: 'success',
+          message: `Edge deleted: ${source} → ${target}`,
+        });
 
-      // Reload DAG
-      const dagData = await api.dags.get(selectedModel.current_dag_id);
-      setDag(dagData);
-      setSelectedNodes([]);
-      setSelectedEdges([]);
-    } catch (err: any) {
-      setOperationStatus({
-        type: 'error',
-        message: err.response?.data?.message || 'Failed to delete edge',
-      });
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+        // Reload DAG
+        const dagData = await api.dags.get(selectedModel.current_dag_id);
+        setDag(dagData);
+        setSelectedNodes([]);
+        setSelectedEdges([]);
+      } catch (err: unknown) {
+        const { message } = extractApiError(err);
+        setOperationStatus({
+          type: 'error',
+          message: message || 'Failed to delete edge',
+        });
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [selectedModel]
+  );
 
   const handleReverseEdge = async (source: string, target: string) => {
     if (!selectedModel) return;
@@ -394,11 +422,11 @@ export const GraphBuilderPage: React.FC = () => {
     } catch (err: any) {
       const errorDetail = err.response?.data?.detail;
       let errorMessage = err.response?.data?.message || 'Failed to reverse edge';
-      
+
       if (errorDetail?.cycle_path && errorDetail.cycle_path.length > 0) {
         errorMessage += ` - Cycle detected: ${errorDetail.cycle_path.join(' → ')}`;
       }
-      
+
       setOperationStatus({
         type: 'error',
         message: errorMessage,

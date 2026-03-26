@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { api } from '../services/api';
 
 interface ImportExportDialogProps {
   isOpen: boolean;
@@ -77,16 +76,13 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
       formData.append('format', format);
       formData.append('created_by', 'current_user'); // TODO: Get from auth context
 
-      const response = await fetch(
-        `http://localhost:8000/api/v1/dags/${stationId}/import`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
-          },
-          body: formData,
-        }
-      );
+      const response = await fetch(`http://localhost:8000/api/v1/dags/${stationId}/import`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+        body: formData,
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -167,9 +163,7 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
 
         {/* Mode Selection */}
         <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-            Mode
-          </label>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Mode</label>
           <div style={{ display: 'flex', gap: '10px' }}>
             <button
               onClick={() => setMode('export')}
@@ -292,11 +286,9 @@ export const ImportExportDialog: React.FC<ImportExportDialogProps> = ({
               padding: '8px 16px',
               borderRadius: '4px',
               border: 'none',
-              background:
-                loading || (mode === 'import' && !file) ? '#ccc' : '#4CAF50',
+              background: loading || (mode === 'import' && !file) ? '#ccc' : '#4CAF50',
               color: 'white',
-              cursor:
-                loading || (mode === 'import' && !file) ? 'not-allowed' : 'pointer',
+              cursor: loading || (mode === 'import' && !file) ? 'not-allowed' : 'pointer',
               fontSize: '14px',
               fontWeight: 'bold',
             }}

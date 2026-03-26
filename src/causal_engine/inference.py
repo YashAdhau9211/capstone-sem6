@@ -753,6 +753,55 @@ class CausalInferenceEngine:
         self._counterfactual_cache.clear()
         self.logger.info("Cleared all caches")
     
+    def _load_station_data(self, station_id: str) -> pd.DataFrame:
+        """
+        Load station data for inference.
+        
+        In production, this would query the time-series database.
+        For now, we generate mock data.
+        
+        Args:
+            station_id: Station identifier
+        
+        Returns:
+            DataFrame with time-series data
+        """
+        # TODO: Implement actual data loading from time-series database
+        # For now, generate mock data for testing
+        import numpy as np
+        
+        self.logger.info(f"Loading data for station {station_id}")
+        
+        # Generate mock data with causal structure
+        n_samples = 1000
+        np.random.seed(42)
+        
+        # Create causal structure: temperature -> pressure -> flow_rate -> quality
+        # Also: temperature -> energy_consumption
+        temperature = np.random.randn(n_samples) * 50 + 1500  # Mean 1500, std 50
+        pressure = 0.8 * temperature + np.random.randn(n_samples) * 30 + 100
+        flow_rate = 0.6 * temperature + 0.5 * pressure + np.random.randn(n_samples) * 20 + 500
+        quality_score = 0.4 * flow_rate + np.random.randn(n_samples) * 5 + 90
+        
+        # Energy consumption affected by temperature and pressure
+        energy_consumption = 0.7 * temperature + 0.3 * pressure + np.random.randn(n_samples) * 100 + 2000
+        
+        # Yield affected by temperature, flow_rate, and quality
+        yield_value = 0.5 * temperature + 0.3 * flow_rate + 0.2 * quality_score + np.random.randn(n_samples) * 10 + 1000
+        
+        data = pd.DataFrame({
+            "temperature": temperature,
+            "pressure": pressure,
+            "flow_rate": flow_rate,
+            "quality_score": quality_score,
+            "energy_consumption": energy_consumption,
+            "yield": yield_value,
+        })
+        
+        self.logger.info(f"Loaded {len(data)} samples with {len(data.columns)} variables")
+        
+        return data
+    
     def _topological_sort(self, dag: CausalDAG) -> List[str]:
         """
         Compute topological ordering of DAG nodes.

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import type { CausalDAG } from '../types';
 
 interface InterventionPanelProps {
@@ -39,7 +39,14 @@ export const InterventionPanel: React.FC<InterventionPanelProps> = ({
 
   return (
     <div style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '4px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '20px',
+        }}
+      >
         <h3 style={{ margin: 0 }}>Intervention Specification</h3>
         {Object.keys(interventions).length > 0 && (
           <button
@@ -78,7 +85,14 @@ export const InterventionPanel: React.FC<InterventionPanelProps> = ({
                   borderRadius: '4px',
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '8px',
+                  }}
+                >
                   <strong>{variable}</strong>
                   <button
                     onClick={() => handleRemoveIntervention(variable)}
@@ -95,7 +109,14 @@ export const InterventionPanel: React.FC<InterventionPanelProps> = ({
                     Remove
                   </button>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '8px' }}>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '10px',
+                    marginBottom: '8px',
+                  }}
+                >
                   <div>
                     <span style={{ fontSize: '12px', color: '#666' }}>Factual:</span>
                     <div style={{ fontWeight: 'bold' }}>{factual.toFixed(2)}</div>
@@ -114,7 +135,14 @@ export const InterventionPanel: React.FC<InterventionPanelProps> = ({
                   onChange={(e) => handleSliderChange(variable, parseFloat(e.target.value))}
                   style={{ width: '100%' }}
                 />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#666' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    fontSize: '12px',
+                    color: '#666',
+                  }}
+                >
                   <span>{min.toFixed(2)}</span>
                   <span>{max.toFixed(2)}</span>
                 </div>
@@ -185,7 +213,9 @@ export const InterventionPanel: React.FC<InterventionPanelProps> = ({
       )}
 
       {availableVariables.length === 0 && Object.keys(interventions).length === 0 && (
-        <p style={{ color: '#666', fontStyle: 'italic' }}>No variables available for intervention</p>
+        <p style={{ color: '#666', fontStyle: 'italic' }}>
+          No variables available for intervention
+        </p>
       )}
     </div>
   );

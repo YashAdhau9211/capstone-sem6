@@ -53,7 +53,14 @@ export const ScenarioManager: React.FC<ScenarioManagerProps> = ({
 
   return (
     <div style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '4px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '20px',
+        }}
+      >
         <h3 style={{ margin: 0 }}>Scenario Management</h3>
         <div style={{ display: 'flex', gap: '10px' }}>
           {selectedForComparison.size >= 2 && (
@@ -183,12 +190,23 @@ export const ScenarioManager: React.FC<ScenarioManagerProps> = ({
                 padding: '15px',
                 border: '1px solid #dee2e6',
                 borderRadius: '4px',
-                backgroundColor: selectedForComparison.has(scenario.scenario_id) ? '#e7f3ff' : 'white',
+                backgroundColor: selectedForComparison.has(scenario.scenario_id)
+                  ? '#e7f3ff'
+                  : 'white',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+              <div
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}
+              >
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      marginBottom: '5px',
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={selectedForComparison.has(scenario.scenario_id)}
@@ -203,12 +221,8 @@ export const ScenarioManager: React.FC<ScenarioManagerProps> = ({
                     </p>
                   )}
                   <div style={{ fontSize: '12px', color: '#999', marginTop: '5px' }}>
-                    <div>
-                      Interventions: {Object.keys(scenario.interventions).join(', ')}
-                    </div>
-                    <div>
-                      Created: {new Date(scenario.created_at).toLocaleString()}
-                    </div>
+                    <div>Interventions: {Object.keys(scenario.interventions).join(', ')}</div>
+                    <div>Created: {new Date(scenario.created_at).toLocaleString()}</div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '5px' }}>

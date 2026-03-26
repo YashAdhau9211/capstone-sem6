@@ -6,10 +6,7 @@ interface ScenarioComparisonProps {
   onClose: () => void;
 }
 
-export const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
-  scenarios,
-  onClose,
-}) => {
+export const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({ scenarios, onClose }) => {
   if (scenarios.length < 2) {
     return null;
   }
@@ -49,7 +46,14 @@ export const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '20px',
+          }}
+        >
           <h2 style={{ margin: 0 }}>Scenario Comparison</h2>
           <button
             onClick={onClose}
@@ -67,7 +71,14 @@ export const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
         </div>
 
         {/* Scenario Headers */}
-        <div style={{ marginBottom: '20px', display: 'grid', gridTemplateColumns: `200px repeat(${scenarios.length}, 1fr)`, gap: '10px' }}>
+        <div
+          style={{
+            marginBottom: '20px',
+            display: 'grid',
+            gridTemplateColumns: `200px repeat(${scenarios.length}, 1fr)`,
+            gap: '10px',
+          }}
+        >
           <div></div>
           {scenarios.map((scenario) => (
             <div
@@ -106,27 +117,28 @@ export const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {Array.from(
-                  new Set(scenarios.flatMap((s) => Object.keys(s.interventions)))
-                ).map((variable) => (
-                  <tr key={variable} style={{ borderBottom: '1px solid #dee2e6' }}>
-                    <td style={{ padding: '12px', fontWeight: 'bold' }}>{variable}</td>
-                    {scenarios.map((scenario) => (
-                      <td
-                        key={scenario.scenario_id}
-                        style={{
-                          padding: '12px',
-                          textAlign: 'right',
-                          color: scenario.interventions[variable] !== undefined ? '#007bff' : '#999',
-                        }}
-                      >
-                        {scenario.interventions[variable] !== undefined
-                          ? scenario.interventions[variable].toFixed(3)
-                          : '—'}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
+                {Array.from(new Set(scenarios.flatMap((s) => Object.keys(s.interventions)))).map(
+                  (variable) => (
+                    <tr key={variable} style={{ borderBottom: '1px solid #dee2e6' }}>
+                      <td style={{ padding: '12px', fontWeight: 'bold' }}>{variable}</td>
+                      {scenarios.map((scenario) => (
+                        <td
+                          key={scenario.scenario_id}
+                          style={{
+                            padding: '12px',
+                            textAlign: 'right',
+                            color:
+                              scenario.interventions[variable] !== undefined ? '#007bff' : '#999',
+                          }}
+                        >
+                          {scenario.interventions[variable] !== undefined
+                            ? scenario.interventions[variable].toFixed(3)
+                            : '—'}
+                        </td>
+                      ))}
+                    </tr>
+                  )
+                )}
               </tbody>
             </table>
           </div>
@@ -172,7 +184,14 @@ export const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
                           </td>
                         );
                       })}
-                      <td style={{ padding: '12px', textAlign: 'right', color: '#666', fontSize: '12px' }}>
+                      <td
+                        style={{
+                          padding: '12px',
+                          textAlign: 'right',
+                          color: '#666',
+                          fontSize: '12px',
+                        }}
+                      >
                         ±{(range / 2).toFixed(3)}
                       </td>
                     </tr>
@@ -220,9 +239,7 @@ export const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
                               fontWeight: 'bold',
                             }}
                           >
-                            {diff !== undefined
-                              ? `${diff > 0 ? '+' : ''}${diff.toFixed(3)}`
-                              : '—'}
+                            {diff !== undefined ? `${diff > 0 ? '+' : ''}${diff.toFixed(3)}` : '—'}
                           </td>
                         );
                       })}
@@ -234,11 +251,19 @@ export const ScenarioComparison: React.FC<ScenarioComparisonProps> = ({
           </div>
         </div>
 
-        <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#fff3cd', borderRadius: '4px' }}>
+        <div
+          style={{
+            marginTop: '20px',
+            padding: '15px',
+            backgroundColor: '#fff3cd',
+            borderRadius: '4px',
+          }}
+        >
           <strong>Trade-offs Analysis:</strong>
           <p style={{ margin: '10px 0 0 0', fontSize: '14px' }}>
-            Compare the differences to identify trade-offs between scenarios. Green values indicate improvements,
-            red values indicate degradation. Consider which scenario best balances your optimization objectives.
+            Compare the differences to identify trade-offs between scenarios. Green values indicate
+            improvements, red values indicate degradation. Consider which scenario best balances
+            your optimization objectives.
           </p>
         </div>
       </div>

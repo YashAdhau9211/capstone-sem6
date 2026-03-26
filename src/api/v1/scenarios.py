@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import List
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Path, Query, status
 
 from src.api.exceptions import ResourceNotFoundError, ValidationError
 from src.models.timeseries import SimulationScenario
@@ -18,18 +18,8 @@ router = APIRouter()
 _scenarios_store: dict[str, SimulationScenario] = {}
 
 
-@router.post("/scenarios", status_code=status.HTTP_201_CREATED)
-async def save_scenario(
-    station_id: str,
-    name: str,
-    description: str,
-    interventions: dict[str, float],
-    factual_outcomes: dict[str, float],
-    counterfactual_outcomes: dict[str, float],
-    differences: dict[str, float],
-    confidence_intervals: dict[str, tuple[float, float]],
-    created_by: str,
-) -> dict:
+@router.post("/", status_code=status.HTTP_201_CREATED)
+async def save_scenario(request: dict) -> dict:
     """
     Save a simulation scenario for later comparison.
     
@@ -40,32 +30,32 @@ async def save_scenario(
         
         scenario = SimulationScenario(
             scenario_id=scenario_id,
-            station_id=station_id,
-            interventions=interventions,
-            factual_outcomes=factual_outcomes,
-            counterfactual_outcomes=counterfactual_outcomes,
-            differences=differences,
-            confidence_intervals=confidence_intervals,
+            station_id=request["station_id"],
+            interventions=request["interventions"],
+            factual_outcomes=request["factual_outcomes"],
+            counterfactual_outcomes=request["counterfactual_outcomes"],
+            differences=request["differences"],
+            confidence_intervals=request["confidence_intervals"],
             timestamp=datetime.utcnow(),
-            description=description,
-            metadata={"created_by": created_by, "name": name}
+            description=request.get("description", ""),
+            metadata={"created_by": request.get("created_by", "unknown"), "name": request.get("name", "Unnamed")}
         )
         
         _scenarios_store[scenario_id] = scenario
         
-        logger.info(f"Saved scenario {scenario_id} for station {station_id}")
+        logger.info(f"Saved scenario {scenario_id} for station {request['station_id']}")
         
         return {
             "scenario_id": scenario_id,
-            "station_id": station_id,
-            "name": name,
-            "description": description,
-            "interventions": interventions,
-            "factual_outcomes": factual_outcomes,
-            "counterfactual_outcomes": counterfactual_outcomes,
-            "differences": differences,
-            "confidence_intervals": confidence_intervals,
-            "created_by": created_by,
+            "station_id": scenario.station_id,
+            "name": scenario.metadata.get("name", "Unnamed"),
+            "description": scenario.description,
+            "interventions": scenario.interventions,
+            "factual_outcomes": scenario.factual_outcomes,
+            "counterfactual_outcomes": scenario.counterfactual_outcomes,
+            "differences": scenario.differences,
+            "confidence_intervals": scenario.confidence_intervals,
+            "created_by": scenario.metadata.get("created_by", "unknown"),
             "created_at": scenario.timestamp.isoformat(),
         }
         
@@ -77,8 +67,8 @@ async def save_scenario(
         )
 
 
-@router.get("/scenarios")
-async def list_scenarios(station_id: str | None = None) -> List[dict]:
+@router.get("/")
+async def list_scenarios(station_id: str | None = Query(None)) -> List[dict]:
     """
     List all saved scenarios, optionally filtered by station.
     
@@ -115,8 +105,8 @@ async def list_scenarios(station_id: str | None = None) -> List[dict]:
         )
 
 
-@router.get("/scenarios/{scenario_id}")
-async def get_scenario(scenario_id: str) -> dict:
+@router.get("/{scenario_id}")
+async def get_scenario(scenario_id: str = Path(...)) -> dict:
     """
     Get a specific scenario by ID.
     
@@ -144,8 +134,8 @@ async def get_scenario(scenario_id: str) -> dict:
     }
 
 
-@router.delete("/scenarios/{scenario_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_scenario(scenario_id: str):
+@router.delete("/{scenario_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_scenario(scenario_id: str = Path(...)):
     """
     Delete a saved scenario.
     
@@ -161,13 +151,15 @@ async def delete_scenario(scenario_id: str):
     logger.info(f"Deleted scenario {scenario_id}")
 
 
-@router.post("/scenarios/compare")
-async def compare_scenarios(scenario_ids: List[str]) -> dict:
+@router.post("/compare")
+async def compare_scenarios(request: dict) -> dict:
     """
     Compare multiple scenarios side-by-side.
     
     **Requirements:** 10.7
     """
+    scenario_ids = request.get("scenario_ids", [])
+    
     if len(scenario_ids) < 2:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -1,4 +1,4 @@
-.PHONY: help install dev-setup test lint format clean docker-up docker-down mock-data test-mock setup-influxdb
+.PHONY: help install dev-setup test lint format clean docker-up docker-down mock-data test-mock setup-influxdb setup-keycloak
 
 help:
 	@echo "Causal AI Manufacturing Platform - Development Commands"
@@ -12,6 +12,7 @@ help:
 	@echo "  make docker-up      - Start Docker services"
 	@echo "  make docker-down    - Stop Docker services"
 	@echo "  make setup-influxdb - Configure InfluxDB buckets and retention policies"
+	@echo "  make setup-keycloak - Configure Keycloak realm, roles, and test users"
 	@echo "  make mock-data      - Generate mock manufacturing data"
 	@echo "  make test-mock      - Run example tests with mock data"
 	@echo "  make clean          - Clean build artifacts and cache"
@@ -41,6 +42,22 @@ setup-influxdb:
 	@echo "Setting up InfluxDB buckets and retention policies..."
 	poetry run python scripts/setup_influxdb.py
 	@echo "✓ InfluxDB setup complete"
+
+setup-keycloak:
+	@echo "Setting up Keycloak realm, roles, and test users..."
+	@echo "Waiting for Keycloak to be ready..."
+	poetry run python scripts/setup_keycloak.py
+	@echo "✓ Keycloak setup complete"
+	@echo ""
+	@echo "Test users created:"
+	@echo "  engineer / Engineer123! (Process_Engineer)"
+	@echo "  manager / Manager123! (Plant_Manager)"
+	@echo "  qa / QALead123! (QA_Lead)"
+	@echo "  analyst / Analyst123! (Citizen_Data_Scientist)"
+	@echo "  admin / Admin123! (Admin)"
+	@echo ""
+	@echo "Keycloak Admin Console: http://localhost:8080"
+	@echo "Admin credentials: admin / admin123"
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true

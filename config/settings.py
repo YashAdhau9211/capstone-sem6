@@ -36,6 +36,19 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     api_port: int = 8000
 
+    # Keycloak Configuration
+    keycloak_url: str = "http://localhost:8080"
+    keycloak_realm: str = "causal-ai"
+    keycloak_client_id: str = "causal-ai-platform"
+    keycloak_client_secret: str = ""  # Set in production
+
+    # Security Configuration
+    jwt_algorithm: str = "RS256"
+    session_timeout_minutes: int = 30
+    password_min_length: int = 12
+    max_failed_login_attempts: int = 5
+    account_lockout_duration_minutes: int = 30
+
     @property
     def postgres_url(self) -> str:
         """Get PostgreSQL connection URL."""

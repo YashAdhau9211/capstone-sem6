@@ -18,8 +18,17 @@ export const CounterfactualDisplay: React.FC<CounterfactualDisplayProps> = ({
 }) => {
   if (loading) {
     return (
-      <div style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}>
-        <div style={{ fontSize: '18px', color: '#666' }}>Computing counterfactual predictions...</div>
+      <div
+        style={{
+          padding: '20px',
+          border: '1px solid #ddd',
+          borderRadius: '4px',
+          textAlign: 'center',
+        }}
+      >
+        <div style={{ fontSize: '18px', color: '#666' }}>
+          Computing counterfactual predictions...
+        </div>
         <div style={{ marginTop: '10px', fontSize: '14px', color: '#999' }}>
           Target: &lt;500ms at 95th percentile
         </div>
@@ -29,7 +38,14 @@ export const CounterfactualDisplay: React.FC<CounterfactualDisplayProps> = ({
 
   if (error) {
     return (
-      <div style={{ padding: '20px', border: '1px solid #dc3545', borderRadius: '4px', backgroundColor: '#f8d7da' }}>
+      <div
+        style={{
+          padding: '20px',
+          border: '1px solid #dc3545',
+          borderRadius: '4px',
+          backgroundColor: '#f8d7da',
+        }}
+      >
         <h3 style={{ color: '#721c24', margin: '0 0 10px 0' }}>Error</h3>
         <p style={{ color: '#721c24', margin: 0 }}>{error}</p>
       </div>
@@ -49,7 +65,14 @@ export const CounterfactualDisplay: React.FC<CounterfactualDisplayProps> = ({
 
   return (
     <div style={{ padding: '20px', border: '1px solid #ddd', borderRadius: '4px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '20px',
+        }}
+      >
         <h3 style={{ margin: 0 }}>Counterfactual Predictions</h3>
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           {wsConnected !== undefined && (
@@ -62,14 +85,13 @@ export const CounterfactualDisplay: React.FC<CounterfactualDisplayProps> = ({
                   backgroundColor: wsConnected ? '#28a745' : '#dc3545',
                 }}
               />
-              <span style={{ color: '#666' }}>
-                {wsConnected ? 'Real-time' : 'Disconnected'}
-              </span>
+              <span style={{ color: '#666' }}>{wsConnected ? 'Real-time' : 'Disconnected'}</span>
             </div>
           )}
           {latency !== null && latency !== undefined && (
             <div style={{ fontSize: '12px', color: '#666' }}>
-              Latency: <strong style={{ color: latency < 500 ? '#28a745' : '#dc3545' }}>
+              Latency:{' '}
+              <strong style={{ color: latency < 500 ? '#28a745' : '#dc3545' }}>
                 {latency.toFixed(0)}ms
               </strong>
               {latency < 500 && ' ✓'}
@@ -95,7 +117,7 @@ export const CounterfactualDisplay: React.FC<CounterfactualDisplayProps> = ({
               const counterfactual = result.counterfactual[variable];
               const difference = result.difference[variable];
               const ci = result.confidence_intervals[variable];
-              const percentChange = factual !== 0 ? ((difference / factual) * 100) : 0;
+              const percentChange = factual !== 0 ? (difference / factual) * 100 : 0;
 
               const getDifferenceColor = (diff: number) => {
                 if (Math.abs(diff) < 0.01) return '#6c757d';
@@ -106,7 +128,14 @@ export const CounterfactualDisplay: React.FC<CounterfactualDisplayProps> = ({
                 <tr key={variable} style={{ borderBottom: '1px solid #dee2e6' }}>
                   <td style={{ padding: '12px', fontWeight: 'bold' }}>{variable}</td>
                   <td style={{ padding: '12px', textAlign: 'right' }}>{factual.toFixed(3)}</td>
-                  <td style={{ padding: '12px', textAlign: 'right', fontWeight: 'bold', color: '#007bff' }}>
+                  <td
+                    style={{
+                      padding: '12px',
+                      textAlign: 'right',
+                      fontWeight: 'bold',
+                      color: '#007bff',
+                    }}
+                  >
                     {counterfactual.toFixed(3)}
                   </td>
                   <td
@@ -124,7 +153,9 @@ export const CounterfactualDisplay: React.FC<CounterfactualDisplayProps> = ({
                       {percentChange.toFixed(1)}%)
                     </span>
                   </td>
-                  <td style={{ padding: '12px', textAlign: 'right', fontSize: '12px', color: '#666' }}>
+                  <td
+                    style={{ padding: '12px', textAlign: 'right', fontSize: '12px', color: '#666' }}
+                  >
                     [{ci[0].toFixed(3)}, {ci[1].toFixed(3)}]
                   </td>
                 </tr>
@@ -134,9 +165,23 @@ export const CounterfactualDisplay: React.FC<CounterfactualDisplayProps> = ({
         </table>
       </div>
 
-      <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#e7f3ff', borderRadius: '4px' }}>
+      <div
+        style={{
+          marginTop: '20px',
+          padding: '15px',
+          backgroundColor: '#e7f3ff',
+          borderRadius: '4px',
+        }}
+      >
         <h4 style={{ margin: '0 0 10px 0', fontSize: '14px' }}>Legend</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', fontSize: '13px' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '10px',
+            fontSize: '13px',
+          }}
+        >
           <div>
             <strong>Factual:</strong> Current/observed values
           </div>

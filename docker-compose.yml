@@ -86,6 +86,30 @@ services:
       timeout: 10s
       retries: 5
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    container_name: causal-ai-keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin123
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/causal_ai_db
+      KC_DB_USERNAME: causal_user
+      KC_DB_PASSWORD: causal_pass
+      KC_HOSTNAME: localhost
+      KC_HTTP_ENABLED: "true"
+    command: start-dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
 volumes:
   postgres_data:
   redis_data:

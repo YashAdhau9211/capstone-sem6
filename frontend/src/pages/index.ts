@@ -6,3 +6,6 @@ export { GraphBuilderPage } from './GraphBuilderPage';
 export { ModelsPage } from './ModelsPage';
 export { RCAPage } from './RCAPage';
 export { SimulationPage } from './SimulationPage';
+export { EnergyOptimizationPage } from './EnergyOptimizationPage';
+export { YieldOptimizationPage } from './YieldOptimizationPage';
+export { CitizenAnalystPage } from './CitizenAnalystPage';
