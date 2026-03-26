@@ -179,6 +179,50 @@ class CausalDAG:
         
         return True
     
+    def find_cycle(self) -> Optional[List[str]]:
+        """Find a cycle in the graph if one exists.
+        
+        Returns:
+            List of nodes forming a cycle, or None if graph is acyclic.
+        """
+        # Build adjacency list
+        adj_list: Dict[str, List[str]] = {node: [] for node in self.nodes}
+        for edge in self.edges:
+            adj_list[edge.source].append(edge.target)
+        
+        # Track visit states and path
+        state = {node: 0 for node in self.nodes}  # 0=unvisited, 1=visiting, 2=visited
+        path: List[str] = []
+        
+        def find_cycle_dfs(node: str) -> Optional[List[str]]:
+            if state[node] == 1:  # Currently visiting - cycle detected
+                # Extract cycle from path
+                cycle_start = path.index(node)
+                return path[cycle_start:] + [node]
+            if state[node] == 2:  # Already visited
+                return None
+            
+            state[node] = 1  # Mark as visiting
+            path.append(node)
+            
+            for neighbor in adj_list[node]:
+                cycle = find_cycle_dfs(neighbor)
+                if cycle:
+                    return cycle
+            
+            path.pop()
+            state[node] = 2  # Mark as visited
+            return None
+        
+        # Check all nodes
+        for node in self.nodes:
+            if state[node] == 0:
+                cycle = find_cycle_dfs(node)
+                if cycle:
+                    return cycle
+        
+        return None
+    
     def find_path(self, source: str, target: str) -> Optional[List[str]]:
         """Find causal path between nodes using BFS."""
         if source not in self.nodes:
